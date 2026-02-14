@@ -34,6 +34,7 @@ That's it. No preprocessing, no tensor handling, just works.
 | Adjust confidence | `model("img.jpg", threshold=0.8)` |
 | Save output | `model("img.jpg").save("out.jpg")` |
 | Get raw data | `r = model("img.jpg"); print(r.boxes, r.labels)` |
+| Train on your data | `model.train(data="dataset/", epochs=50)` |
 | Web interface | `model.ui()` |
 | Speed test | `model.benchmark()` |
 
@@ -70,6 +71,60 @@ pip install easy-rfdetr[gradio]
 | small | ~4ms | 72.1% AP50 | Fast prototyping |
 | medium | ~6ms | 73.6% AP50 | **Default - balanced** |
 | large | ~10ms | 75.1% AP50 | Maximum accuracy |
+
+---
+
+## Training
+
+Train on your own dataset in just a few lines:
+
+```python
+from easy_rfdetr import RFDETR
+
+model = RFDETR("medium")
+model.train(data="path/to/dataset/", epochs=50, batch=8)
+```
+
+### Dataset Format
+
+Supports both COCO and YOLO formats (auto-detected):
+
+```
+dataset/
+├── train/
+│   ├── images/
+│   └── labels/
+├── valid/
+│   ├── images/
+│   └── labels/
+└── test/
+    ├── images/
+    └── labels/
+```
+
+### Training Options
+
+| Option | Default | Description |
+|--------|---------|-------------|
+| `epochs` | 100 | Number of training epochs |
+| `batch` | 4 | Batch size |
+| `lr` | 1e-4 | Learning rate |
+| `imgsz` | model default | Image size |
+| `output` | runs/train | Output directory |
+| `resume` | False | Resume from checkpoint |
+
+### Example: Fine-tune for 50 epochs
+
+```python
+model = RFDETR("medium")
+model.train(
+    data="my_dataset/",
+    epochs=50,
+    batch=8,
+    lr=1e-4,
+    output="runs/train/my_experiment"
+)
+```
 
 ---
 

@@ -182,9 +182,7 @@ def download_weights(model_name: str, cache_dir: Optional[Path] = None) -> str:
 
         with (
             open(weights_path, "wb") as f,
-            tqdm(
-                total=total_size, unit="B", unit_scale=True, desc=weights_filename
-            ) as pbar,
+            tqdm(total=total_size, unit="B", unit_scale=True, desc=weights_filename) as pbar,
         ):
             for chunk in response.iter_content(chunk_size=chunk_size):
                 if chunk:
@@ -224,9 +222,7 @@ def load_image(source: Union[str, Image.Image, np.ndarray]) -> Image.Image:
             return Image.open(source).convert("RGB")
 
         if os.path.isdir(source):
-            raise ValueError(
-                "Use predict() with a directory to process multiple images"
-            )
+            raise ValueError("Use predict() with a directory to process multiple images")
 
     raise ValueError(f"Unsupported image source: {type(source)}")
 
@@ -296,3 +292,75 @@ def get_model_resolution(model_name: str) -> int:
     if key not in MODEL_CONFIG:
         key = "medium"
     return MODEL_CONFIG[key]["resolution"]
+
+
+def detect_dataset_format(dataset_path: str) -> str:
+    """Detect dataset format (COCO or YOLO).
+
+    Args:
+        dataset_path: Path to dataset directory
+
+    Returns:
+        "coco", "yolo", or "auto"
+    """
+    if not os.path.exists(dataset_path):
+        raise ValueError(f"Dataset path does not exist: {dataset_path}")
+
+    train_dir = os.path.join(dataset_path, "train")
+    if not os.path.isdir(train_dir):
+        train_dir = dataset_path
+
+    files = os.listdir(train_dir)
+
+    if "_annotations.coco.json" in files or "_annotations_.coco.json" in files:
+        return "coco"
+
+    if any(f.endswith(".txt") for f in files if os.path.isfile(os.path.join(train_dir, f))):
+        return "yolo"
+
+    return "auto"
+
+
+def prepare_train_config(
+    data: str,
+    epochs: int = 100,
+    batch: int = 4,
+    imgsz: int = None,
+    lr: float = 1e-4,
+    output: str = "runs/train",
+    resume: bool = False,
+    device: str = "auto",
+    **kwargs,
+) -> dict:
+    """Prepare training configuration for rfdetr.
+
+    Args:
+        data: Path to dataset directory
+        epochs: Number of training epochs
+        batch: Batch size
+        imgsz: Image size (uses model default if None)
+        lr: Learning rate
+        output: Output directory
+        resume: Resume from checkpoint
+        device: Device to use
+        **kwargs: Additional training options
+
+    Returns:
+        Training configuration dict
+    """
+    config = {
+        "dataset_dir": data,
+        "epochs": epochs,
+        "batch_size": batch,
+        "lr": lr,
+        "output_dir": output,
+        "resume": resume if isinstance(resume, str) else None,
+        "device": get_device(device),
+    }
+
+    if imgsz is not None:
+        config["imgsz"] = imgsz
+
+    config.update(kwargs)
+
+    return config

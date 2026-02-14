@@ -226,8 +226,7 @@ class RFDETR:
 
         class_names_list = get_class_names()
         labels = [
-            class_names_list[cid] if cid < len(class_names_list) else str(cid)
-            for cid in class_ids
+            class_names_list[cid] if cid < len(class_names_list) else str(cid) for cid in class_ids
         ]
 
         return Results(
@@ -251,6 +250,90 @@ class RFDETR:
                 console.print(f"Processing {i + 1}/{len(sources)}...")
             results.append(self._predict_single(source, threshold, verbose))
         return results
+
+    def train(
+        self,
+        data: str,
+        epochs: int = 100,
+        batch: int = 4,
+        imgsz: Optional[int] = None,
+        lr: float = 1e-4,
+        output: str = "runs/train",
+        resume: bool = False,
+        device: str = "auto",
+        name: str = "exp",
+        exist_ok: bool = False,
+        pretrained: bool = True,
+        verbose: bool = True,
+        **kwargs,
+    ):
+        """Train the model on a custom dataset.
+
+        Args:
+            data: Path to dataset directory (COCO or YOLO format)
+            epochs: Number of training epochs (default: 100)
+            batch: Batch size (default: 4)
+            imgsz: Input image size (uses model default if None)
+            lr: Learning rate (default: 1e-4)
+            output: Output directory for training runs
+            resume: Resume from checkpoint (True or checkpoint path)
+            device: Device to use (auto, cuda, cpu)
+            name: Experiment name
+            exist_ok: Allow overwriting existing experiment
+            pretrained: Use pretrained weights (default: True)
+            verbose: Print training progress
+            **kwargs: Additional training options
+
+        Returns:
+            Training results
+
+        Example:
+            >>> model = RFDETR("medium")
+            >>> model.train(data="dataset/", epochs=50, batch=8)
+        """
+        from easy_rfdetr.utils import detect_dataset_format, prepare_train_config
+
+        if verbose:
+            console.print(f"[bold cyan]🎯 Starting training...[/bold cyan]")
+            console.print(f"[cyan]Dataset:[/cyan] {data}")
+            console.print(f"[cyan]Model:[/cyan] RFDETR-{self._model_name.title()}")
+            console.print(f"[cyan]Epochs:[/cyan] {epochs}")
+            console.print(f"[cyan]Batch:[/cyan] {batch}")
+
+        dataset_format = detect_dataset_format(data)
+        if verbose:
+            console.print(f"[cyan]Dataset format:[/cyan] {dataset_format}")
+
+        if not exist_ok and os.path.exists(os.path.join(output, name)):
+            console.print(
+                f"[yellow]⚠️  Experiment {name} exists. Use exist_ok=True to overwrite.[/yellow]"
+            )
+            return None
+
+        config = prepare_train_config(
+            data=data,
+            epochs=epochs,
+            batch=batch,
+            imgsz=imgsz,
+            lr=lr,
+            output=os.path.join(output, name),
+            resume=resume,
+            device=device,
+            **kwargs,
+        )
+
+        try:
+            self._model.train(**config)
+
+            if verbose:
+                console.print(f"[green]✅ Training complete![/green]")
+                console.print(f"[cyan]Results saved to:[/cyan] {config['output_dir']}")
+
+            return {"output_dir": config["output_dir"], "epochs": epochs}
+
+        except Exception as e:
+            console.print(f"[bold red]❌ Training failed: {e}[/bold red]")
+            raise
 
     def benchmark(
         self,
@@ -343,9 +426,7 @@ class RFDETR:
             fn=predict_fn,
             inputs=[
                 gr.Image(label="Input Image", type="pil"),
-                gr.Slider(
-                    0, 1, value=self._threshold, step=0.05, label="Confidence Threshold"
-                ),
+                gr.Slider(0, 1, value=self._threshold, step=0.05, label="Confidence Threshold"),
             ],
             outputs=gr.Image(label="Detections"),
             title=title,
