@@ -7,10 +7,7 @@
   <a href="https://colab.research.google.com/github/easy-rfdetr/easy-rfdetr/blob/main/examples/train.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open in Colab"></a>
 </p>
 
-<!-- Add your demo GIF here: -->
-<!-- ![RFDETR Demo](assets/demo.gif) -->
-
-## Train Custom Models in 3 Lines
+## Train a Model
 
 ```python
 from easy_rfdetr import RFDETR
@@ -19,84 +16,39 @@ model = RFDETR("medium")
 model.train(data="my_dataset/", epochs=50)
 ```
 
-That's it. No config files, no CLI commands, no boilerplate.
+## Run Inference
 
----
+```python
+model("image.jpg").show()
+```
 
-## Why easy-rfdetr?
-
-| What | rfdetr (original) | easy-rfdetr |
-|------|-------------------|-------------|
-| Training | 50+ lines of config | 1 line |
-| Inference | Manual preprocessing | Works out of the box |
-| Dataset format | Manual setup | Auto-detects COCO/YOLO |
-| Device | Manual cuda/cpu | Auto-detects |
-
-**Transformer accuracy. YOLO simplicity.**
-
----
-
-## Common Workflows
-
-| What you want | How to do it |
-|--------------|--------------|
-| **Train your model** | `model.train(data="data/", epochs=50)` |
-| Continue training | `model.train(data="data/", resume=True)` |
-| Use trained model | `model("image.jpg").show()` |
-| From URL | `model("https://example.com/img.jpg")` |
-| Batch predict | `model(["a.jpg", "b.jpg"])` |
-| Adjust confidence | `model("img.jpg", threshold=0.8)` |
-| Save output | `model("img.jpg").save("out.jpg")` |
-| Get raw boxes | `r = model("img.jpg"); print(r.boxes)` |
-| Web UI | `model.ui()` |
-| Speed test | `model.benchmark()` |
-
----
-
-## Installation
+## Install
 
 ```bash
 pip install easy-rfdetr
-```
-
-With web UI:
-```bash
-pip install easy-rfdetr[gradio]
 ```
 
 ---
 
 ## Training
 
-### Dataset Format
-
-Just drop your data in a folder. We auto-detect COCO or YOLO format:
+Drop your dataset in a folder. We auto-detect COCO or YOLO format:
 
 ```
 dataset/
-├── train/
-│   ├── images/
-│   └── labels/
-├── valid/
-│   ├── images/
-│   └── labels/
-└── test/
-    ├── images/
-    └── labels/
+├── train/images/ + labels/
+├── valid/images/ + labels/
+└── test/images/ + labels/
 ```
 
-### Training Options
-
+Train:
 ```python
-model.train(
-    data="my_dataset/",    # Required: path to dataset
-    epochs=50,             # Default: 100
-    batch=8,               # Default: 4
-    lr=1e-4,              # Default: 0.0001
-    output="runs/train",  # Default: ./runs/train
-    imgsz=640,            # Optional: image size
-    resume=False,          # Optional: resume from checkpoint
-)
+model.train(data="dataset/", epochs=50, batch=8)
+```
+
+Resume:
+```python
+model.train(data="dataset/", resume=True)
 ```
 
 ---
@@ -104,29 +56,46 @@ model.train(
 ## Inference
 
 ```python
-from easy_rfdetr import RFDETR
+model = RFDETR("medium")  # nano, small, medium, large
 
-model = RFDETR("medium")           # nano, small, medium, large
-results = model("image.jpg")
+# From file
+model("photo.jpg").show()
 
-print(results.boxes)    # xyxy coordinates
-print(results.scores)   # confidence scores
-print(results.labels)   # ["person", "car", ...]
+# From URL
+model("https://example.com/img.jpg")
 
-results.show()          # Display
-results.save("out.jpg") # Save
+# Batch
+model(["a.jpg", "b.jpg"])
+
+# Confidence threshold
+model("img.jpg", threshold=0.8)
+
+# Get boxes
+r = model("img.jpg")
+print(r.boxes)     # xyxy
+print(r.scores)    # confidence
+print(r.labels)    # ["person", "car", ...]
+
+# Save
+r.save("output.jpg")
 ```
 
 ---
 
-## Model Sizes
+## Web UI
 
-| Model | Speed | Accuracy | Best for |
-|-------|-------|----------|----------|
-| nano | ~2ms | 67.6% AP50 | Embedded |
-| small | ~4ms | 72.1% AP50 | Fast |
-| **medium** | ~6ms | 73.6% AP50 | **Default** |
-| large | ~10ms | 75.1% AP50 | Accuracy |
+```python
+model.ui()
+```
+
+---
+
+## CLI
+
+```bash
+rfdetr predict source=image.jpg
+rfdetr train data=dataset/ epochs=50
+```
 
 ---
 
@@ -134,7 +103,7 @@ results.save("out.jpg") # Save
 
 - Python >= 3.10
 - PyTorch >= 2.0.0
-- CUDA GPU or Apple Silicon (optional)
+- CUDA or Apple Silicon (optional)
 
 ---
 
