@@ -28,6 +28,8 @@ model("image.jpg").show()
 pip install easy-rfdetr
 ```
 
+Drop-in replacement for `YOLO()` from ultralytics. Same API, transformer accuracy.
+
 ---
 
 ## Training
