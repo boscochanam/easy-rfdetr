@@ -50,10 +50,10 @@ youtube = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/easy-rfdetr/easy-rfdetr"
+Homepage = "https://github.com/boscochanam/easy-rfdetr"
 Documentation = "https://easy-rfdetr.readthedocs.io"
-Repository = "https://github.com/easy-rfdetr/easy-rfdetr"
-Issues = "https://github.com/easy-rfdetr/easy-rfdetr/issues"
+Repository = "https://github.com/boscochanam/easy-rfdetr"
+Issues = "https://github.com/boscochanam/easy-rfdetr/issues"
 
 [project.scripts]
 rfdetr = "easy_rfdetr.cli:main"
